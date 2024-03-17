@@ -1,3 +1,5 @@
+import os
+
 from selenium.webdriver.firefox.service import Service
 import time
 from selenium import webdriver
@@ -14,9 +16,48 @@ url = 'https://login.canvas.cornell.edu/'
 #/html/body/div[2]/main/article/div/div[1]/form/fieldset/div[2]/div[1]
 
 # Coordinates and keyboard inputs obtained from the provided data
-loginactions = [
 
-]
+'''
+RETURNS array of tuples of len 2 with the instructions associated with the login sequence
+'''
+#TODO authentication can be set to manual / not google hello
+def processLogin(user, pas, auth):
+    actions = [("Mleft", "/html/body/div[3]/main/div/article/section/div[1]/p[1]/a")]
+    for letter in user:
+        actions.append((str(letter),str(letter)))
+    actions.append(("Special key pressed: Key.tab", Keys.TAB))
+    actions.append(("Special key pressed: Key.shift", Keys.SHIFT))
+    for letter in pas:
+        actions.append((str(letter), str(letter)))
+    actions.append(("Special key pressed: Key.enter", Keys.ENTER))
+    actions.append(("pause", "pauto"))
+    for letter in auth:
+        actions.append((str(letter), str(letter)))
+    actions.append(("pause", "pauto"))
+    actions.append(("Mouse button Button.left pressed at (9, 649)", '//button[@id="trust-browser-button"]'))
+    return actions
+
+
+def processFile(filepath):
+    if not os.path.exists(filepath):
+        file1 = open('loginseq', 'w')
+        file1.writelines(["User:\n","Pass:\n","Auth:\n"])
+        raise Exception("Login file loginseq.txt not filled out")
+    file1 = open(filepath, 'r')
+    Lines = file1.readlines()
+    user = ""
+    password = ""
+    auth = ""
+    for line in Lines:
+        if len(line) > 5 and line[:5].lower() == "user:":
+            user = line[5:]
+        elif len(line) > 5 and line[:5].lower() == "pass:":
+            password = line[5:]
+        elif len(line) > 5 and line[:5].lower() == "auth:":
+            auth = line[5:]
+    if user == "" or password == "" or auth == "":
+        raise Exception("Failure in reading login from loginseq.txt")
+    return processLogin(user, password, auth)
 
 # Time delay between each action (adjust as needed)
 dt_typing = .1
@@ -24,12 +65,11 @@ dt_other = 1
 dt_pause = 5
 
 # Function to execute actions
-def log_in(driver):
+def log_in(loginactions, driver):
     pauto = False  # pyauto mode for windows security'
     for action, key in loginactions:
         print(action)
         if action == "pause":
-            print("aa")
             time.sleep(dt_pause)
             if key == "pauto":
                 pauto = True
@@ -38,17 +78,10 @@ def log_in(driver):
         elif isinstance(key, str) and key[0] != '/':
             if pauto:
                 pyautogui.press(key)
-                print("bloop")
             else:
                 driver.switch_to.active_element.send_keys(key)
                 time.sleep(dt_typing)
         else:
-            # Extract coordinates from action
-            coordinates = action.split("at ")[1][1:-1].split(", ")
-            x, y = int(coordinates[0]), int(coordinates[1])
-            # Perform mouse click at coordinates
-            print(x,y)
-            print(pyautogui.position()[0],pyautogui.position()[1])
             try:
                 ActionChains(driver).move_to_element(driver.find_elements(By.XPATH,key)[0]).click().perform()
                 ActionChains(driver).release().perform()
@@ -57,13 +90,13 @@ def log_in(driver):
             # Perform mouse button up at coordinates
             time.sleep(dt_other)
 
-'''
-Should be a set of functions that BOTH begin and end at the canvas home page
-Should return a list of tuples formatted ((Course, Assignment Name [], Due Date []), (...), ...), where
-corresponding indices between name and date lists match
-'''
 
 def grabGradescope(driver):
+    """
+    Should be a set of functions that BOTH begin and end at the canvas home page
+    Should return a list of tuples formatted ((Course, Assignment Name [], Due Date []), (...), ...), where
+    corresponding indices between name and date lists match
+    """
     gradeHome = "https://www.gradescope.com/"
 
     course_with_gscope = "https://canvas.cornell.edu/courses/60088"
@@ -72,15 +105,13 @@ def grabGradescope(driver):
 
     fails = 0
     for button in apps.find_elements(By.XPATH, ".//*"):
-        print(1)
         try:
             if str(button.text) == "Gradescope":
                 ActionChains(driver).move_to_element(button).click().perform()
-                print("Clicked!")
                 break
         except:
             fails += 1
-    print("Failures: " + str(fails))
+    # print("Failures: " + str(fails))
     time.sleep(4)
     driver.switch_to.window(driver.window_handles[1])
     driver.close()
@@ -147,9 +178,13 @@ def grabGradescope(driver):
     print("Assignments finalized")
     print(output)
     driver.get("https://canvas.cornell.edu/courses")
+    return output
+
+
 def grabAssignmentsTab(driver):
     # TODO
     raise Exception("Unsupported Operation")
+
 
 def main():
     # Initialize the webdriver (in this case, Chrome)
@@ -160,14 +195,16 @@ def main():
     # Open the webpage
     driver.get(url)
 
-    log_in(driver)
+    loginactions = processFile("loginseq")
+    log_in(loginactions, driver)
 
     while "duosecurity.com" in driver.current_url:
         print("waiting")
         time.sleep(2)
-    grabGradescope(driver)
+    out = grabGradescope(driver)
+    return out
+    # driver.quit()?
 
-    # driver.quit()
 
 if __name__ == "__main__":
     main()
