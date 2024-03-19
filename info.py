@@ -8,14 +8,13 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 import pyautogui
 
-# Replace 'YOUR_WEBDRIVER_PATH' with the path to your webdriver executable
-webdriver_path = "C:/Users/kevin/Downloads/geckodrive/geckodriver.exe"
-
 # URL of the webpage
 url = 'https://login.canvas.cornell.edu/'
-#/html/body/div[2]/main/article/div/div[1]/form/fieldset/div[2]/div[1]
 
-# Coordinates and keyboard inputs obtained from the provided data
+# Time delay between each action (adjust as needed)
+dt_typing = .1
+dt_other = 1
+dt_pause = 5
 
 '''
 RETURNS array of tuples of len 2 with the instructions associated with the login sequence
@@ -59,13 +58,11 @@ def processFile(filepath):
         raise Exception("Failure in reading login from loginseq.txt")
     return processLogin(user, password, auth)
 
-# Time delay between each action (adjust as needed)
-dt_typing = .1
-dt_other = 1
-dt_pause = 5
-
-# Function to execute actions
 def log_in(loginactions, driver):
+    """
+    Peforms the log-in procedure with the credentials from loginactions and on the webdriver driver
+    RETURNS nothing
+    """
     pauto = False  # pyauto mode for windows security'
     for action, key in loginactions:
         print(action)
@@ -152,7 +149,7 @@ def grabGradescope(driver):
                     else:
                         name = str(namesFound[0].text)
                 elif i == 1:
-                    # Not really used because assignments that are a button => due, not button => not due
+                    # Not really used because assignments that are a button => due, not button => not due (as far as ik...)
                     elem = data.find_element(By.CLASS_NAME,"submissionStatus--text")
                     submission_status = str(elem.text)
                 elif i == 2:
@@ -187,7 +184,8 @@ def grabAssignmentsTab(driver):
 
 
 def main():
-    # Initialize the webdriver (in this case, Chrome)
+    # Initialize the Firefox webdriver
+    webdriver_path = "C:/Users/kevin/Downloads/geckodrive/geckodriver.exe"
     service = Service(executable_path=webdriver_path)
     driver = webdriver.Firefox(service=service)
     driver.maximize_window()  # Maximize the window to fullscreen
@@ -208,4 +206,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
