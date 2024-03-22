@@ -16,11 +16,12 @@ dt_typing = .1
 dt_other = 1
 dt_pause = 5
 
-'''
-RETURNS array of tuples of len 2 with the instructions associated with the login sequence
-'''
+
 #TODO authentication can be set to manual / not google hello
 def processLogin(user, pas, auth):
+    """
+    RETURNS array of tuples of len 2 with the instructions associated with the login sequence
+    """
     actions = [("Mleft", "/html/body/div[3]/main/div/article/section/div[1]/p[1]/a")]
     for letter in user:
         actions.append((str(letter),str(letter)))
@@ -38,6 +39,9 @@ def processLogin(user, pas, auth):
 
 
 def processFile(filepath):
+    """
+    Process login credentials from loginseq file and return loginseq array with the credentials embedded
+    """
     if not os.path.exists(filepath):
         file1 = open('loginseq', 'w')
         file1.writelines(["User:\n","Pass:\n","Auth:\n"])
@@ -178,7 +182,18 @@ def grabGradescope(driver):
     return output
 
 
-def grabAssignmentsTab(driver):
+def grabAssignmentsTab(driver, classname):
+    """
+    Run the webdriver sequence to grab assignments from the assignments tab in a specified classname
+    """
+    # TODO
+    raise Exception("Unsupported Operation")
+
+
+def grabAssignmentCalendar(driver):
+    """
+    Run the webdriver sequence to grab all assignments from the calendar
+    """
     # TODO
     raise Exception("Unsupported Operation")
 
